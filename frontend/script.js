@@ -1,4 +1,4 @@
-// Monaco Editor setup
+// ----------------- Monaco Editor Setup -----------------
 require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs' }});
 require(["vs/editor/editor.main"], function () {
   window.editor = monaco.editor.create(document.getElementById("editor"), {
@@ -9,7 +9,7 @@ require(["vs/editor/editor.main"], function () {
   });
 });
 
-// Dummy file contents
+// ----------------- Dummy File Contents -----------------
 let files = {
   "main.py": "print('Hello from main.py!')",
   "index.html": "<!DOCTYPE html>\n<html>\n<head><title>Demo</title></head>\n<body>\n<h1>Hello World</h1>\n</body>\n</html>",
@@ -18,29 +18,28 @@ let files = {
   "README.md": "# Trae SOLO IDE\nThis is a demo file explorer + editor."
 };
 
-// Track selected file
 let selectedFileLi = null;
 
-// Open file in editor
+// ----------------- Open File in Editor -----------------
 function openFile(filename, liElement) {
   const content = files[filename] || "";
   const ext = filename.split(".").pop();
-  let lang = "plaintext";
-  if (ext === "py") lang = "python";
-  else if (ext === "js") lang = "javascript";
-  else if (ext === "html") lang = "html";
-  else if (ext === "css") lang = "css";
-
   editor.setValue(content);
-  monaco.editor.setModelLanguage(editor.getModel(), lang);
+  monaco.editor.setModelLanguage(editor.getModel(), ext === "py" ? "python" : ext);
 
-  // Highlight selected file
   if (selectedFileLi) selectedFileLi.classList.remove("selected");
   liElement.classList.add("selected");
   selectedFileLi = liElement;
 }
 
-// Live typing auto-complete
+// ----------------- Mock AI Function (Alert Version) -----------------
+function askAI() {
+  const msg = prompt("Enter your question for AI:");
+  if (!msg) return;
+  sendToBackend(msg);
+}
+
+// ----------------- Auto-complete (Live Typing) -----------------
 function autoComplete() {
   const suggestion = [
     "// AI suggests more code here...",
@@ -56,10 +55,10 @@ function autoComplete() {
     editor.setValue(currentValue + (currentValue ? "\n" : "") + suggestion[i]);
     i++;
     if (i >= suggestion.length) clearInterval(typingInterval);
-  }, 400); // 400ms per line → live typing effect
+  }, 400);
 }
 
-// Dynamic project generator
+// ----------------- Project Generator -----------------
 function generateProject() {
   const newProject = {
     "app": {
@@ -75,7 +74,7 @@ function generateProject() {
 
   const fileList = document.getElementById("file-list");
   fileList.innerHTML = "";
-  selectedFileLi = null; // reset selection
+  selectedFileLi = null;
 
   function renderTree(tree, parentUl = fileList) {
     for (let key in tree) {
@@ -83,11 +82,7 @@ function generateProject() {
 
       if (typeof tree[key] === "string") {
         li.textContent = key;
-        li.classList.add("file");
-        li.onclick = (e) => {
-          e.stopPropagation();
-          openFile(key, li);
-        };
+        li.onclick = (e) => { e.stopPropagation(); openFile(key, li); };
       } else {
         li.textContent = "📁 " + key;
         li.style.cursor = "pointer";
@@ -95,17 +90,17 @@ function generateProject() {
         const ul = document.createElement("ul");
         ul.style.listStyle = "none";
         ul.style.paddingLeft = "15px";
-        ul.style.display = "none"; // start collapsed
+        ul.style.display = "none";
         li.appendChild(ul);
 
         li.onclick = (e) => {
           e.stopPropagation();
           if (ul.style.display === "none") {
             ul.style.display = "block";
-            li.textContent = "📂 " + key; // open folder icon
+            li.textContent = "📂 " + key;
           } else {
             ul.style.display = "none";
-            li.textContent = "📁 " + key; // closed folder icon
+            li.textContent = "📁 " + key;
           }
         };
 
@@ -121,17 +116,19 @@ function generateProject() {
   alert("📂 Mock Project Generated! Click files to view in editor.");
 }
 
-// Flatten project structure
 function flattenFiles(tree) {
   let result = {};
   for (let key in tree) {
-    if (typeof tree[key] === "string") result[key] = tree[key];
-    else Object.assign(result, flattenFiles(tree[key]));
+    if (typeof tree[key] === "string") {
+      result[key] = tree[key];
+    } else {
+      Object.assign(result, flattenFiles(tree[key]));
+    }
   }
   return result;
 }
 
-// Chat box with backend integration
+// ----------------- Chat Functionality -----------------
 async function sendMessage(event) {
   if (event.key === "Enter") {
     const input = document.getElementById("chat-input");
@@ -140,34 +137,37 @@ async function sendMessage(event) {
 
     const chatBox = document.getElementById("chat-box");
 
-    // User message
+    // User bubble
     const userDiv = document.createElement("div");
     userDiv.className = "chat-message user";
     userDiv.textContent = msg;
     chatBox.appendChild(userDiv);
+
+    sendToBackend(msg);
     input.value = "";
     chatBox.scrollTop = chatBox.scrollHeight;
+  }
+}
 
-    // Call Flask backend
-    try {
-      const response = await fetch("http://127.0.0.1:5000/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg }),
-      });
-      const data = await response.json();
+async function sendToBackend(msg) {
+  const chatBox = document.getElementById("chat-box");
+  try {
+    const response = await fetch("http://127.0.0.1:5000/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: msg }),
+    });
+    const data = await response.json();
 
-      const aiDiv = document.createElement("div");
-      aiDiv.className = "chat-message ai";
-      aiDiv.textContent = data.reply;
-      chatBox.appendChild(aiDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    } catch (err) {
-      console.error(err);
-      const aiDiv = document.createElement("div");
-      aiDiv.className = "chat-message ai";
-      aiDiv.textContent = "❌ Error: Could not reach backend";
-      chatBox.appendChild(aiDiv);
-    }
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "chat-message ai";
+    aiDiv.textContent = data.reply;
+    chatBox.appendChild(aiDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+  } catch (err) {
+    const aiDiv = document.createElement("div");
+    aiDiv.className = "chat-message ai";
+    aiDiv.textContent = "🤖 Backend not reachable!";
+    chatBox.appendChild(aiDiv);
   }
 }
