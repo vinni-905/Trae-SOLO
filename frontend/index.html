@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trae SOLO IDE</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Monaco Editor -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+</head>
+<body>
+  <div class="app">
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button onclick="askAI()">Ask AI</button>
+      <button onclick="autoComplete()">Auto-complete</button>
+      <button onclick="generateProject()">Generate Project</button>
+    </div>
+
+    <div class="main">
+      <!-- File Explorer -->
+      <div class="sidebar">
+        <h3>Files</h3>
+        <ul id="file-list">
+          <li onclick="openFile('main.py')">main.py</li>
+          <li onclick="openFile('index.html')">index.html</li>
+          <li onclick="openFile('style.css')">style.css</li>
+          <li onclick="openFile('script.js')">script.js</li>
+          <li onclick="openFile('README.md')">README.md</li>
+        </ul>
+      </div>
+
+      <!-- Code Editor -->
+      <div id="editor"></div>
+
+      <!-- AI Chat -->
+      <div class="chat">
+        <div id="chat-box"></div>
+        <input type="text" id="chat-input" placeholder="Ask AI..." onkeypress="sendMessage(event)">
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
